@@ -237,6 +237,27 @@ export class TabNote extends StemmableNote {
     super.setStave(stave);
     this.context = stave.context;
 
+    // VexFlowPatch: French lute tablature bass courses (diapasons). Courses below
+    // the staff (str > num_lines) are drawn under the staff with slash prefixes:
+    // course (num_lines+1) = letter, +1 slash per further course
+    // (e.g. 7th=a, 8th=/a, 9th=//a, 10th=///a on a 6-line staff).
+    const numLines = stave.getNumLines();
+    if (this.render_options.tabUseLetters) {
+      for (let p = 0; p < this.positions.length; ++p) {
+        const str = this.positions[p].str;
+        const glyph = this.glyphs[p];
+        if (str > numLines && glyph) {
+          // Remember the base letter once; setStave may run multiple times on
+          // re-layout, so always rebuild from the base instead of re-prepending.
+          if (glyph.baseTabText === undefined) {
+            glyph.baseTabText = '' + glyph.text;
+          }
+          const slashes = str - numLines - 1;
+          glyph.text = (slashes > 0 ? '/'.repeat(slashes) : '') + glyph.baseTabText;
+        }
+      }
+    }
+
     // Calculate the fret number width based on font used
     let i;
     if (this.context) {
@@ -258,8 +279,16 @@ export class TabNote extends StemmableNote {
     }
 
     // we subtract 1 from `line` because getYForLine expects a 0-based index,
-    // while the position.str is a 1-based index
-    const ys = this.positions.map(({ str: line }) => stave.getYForLine(line - 1));
+    // while the position.str is a 1-based index.
+    // VexFlowPatch: diapason courses (str > num_lines) are stacked just below the
+    // bottom staff line rather than spreading far below it.
+    const diapasonStep = 0.6; // line-spacings between stacked diapasons below the staff
+    const ys = this.positions.map(({ str: line }) => {
+      if (this.render_options.tabUseLetters && line > numLines) {
+        return stave.getYForLine(numLines - 1) + (line - numLines) * diapasonStep * stave.getSpacingBetweenLines();
+      }
+      return stave.getYForLine(line - 1);
+    });
 
     this.setYs(ys);
 
