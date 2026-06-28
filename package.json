@@ -13,7 +13,7 @@
     "test:watch": "karma start --no-single-run --auto-watch --browsers ChromeNoSecurity",
     "prebuild": "npm-run-all prebuildVexflow",
     "prebuildVexflow": "ncp src/VexFlowPatch/src/ node_modules/vexflow/src/",
-    "prepare": "npm-run-all husky build",
+    "prepare": "true",
     "build": "npm-run-all lint build:webpack",
     "build:webpack": "webpack --progress --config webpack.prod.js",
     "build:webpack-dev": "webpack --progress --config webpack.dev.js",
@@ -40,7 +40,8 @@
     "test:visual:build": "npm-run-all prebuild build:webpack generate:current test:visual",
     "test:visual:build:batch": "npm-run-all prebuild build:webpack generate:current:batch test:visual",
     "test:visual:build:webgl": "npm-run-all prebuild build:webpack generate:current:webgl test:visual",
-    "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven"
+    "test:visual:singletest": "sh ./test/Util/visual_regression.sh ./visual_regression Beethoven",
+    "build:dist": "npm-run-all husky build"
   },
   "pre-commit": [
     "lint"
